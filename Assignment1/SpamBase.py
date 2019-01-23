@@ -29,7 +29,6 @@ class SpamBase:
             self.data_rows = self.spambase_file.read().splitlines()
             for entry in self.data_rows:
                 point = entry.split(',')
-                point = map(float, point)
                 point = list(map(float, point))
                 self.data_set.append(point)
 
@@ -47,7 +46,6 @@ class SpamBase:
         feature_table.pop(len(feature_table)-1)
 
         return feature_table, label
-
 
     '''
     Normalizes data through shift and scale technique. Subtracts minimum value from each and divides new maximum value
@@ -76,14 +74,16 @@ class SpamBase:
     to validate with the test data. At the end, returns the average accuracy score. 
     '''
     def train(self):
-        decision_tree = DecisionTree()
+        decision_tree = DecisionTree(False)
         accuracy_score = 0
         train_data, test_data = self.kfold_split(self.k)
-        for i in range(self.k):
-            feature_set, labels = self.generate_feature_label(train_data[i])
-            classifier = decision_tree.train(feature_set, labels)
+        for i in range(1):
+            #feature_set, labels = self.generate_feature_label(train_data[i])
+            classifier = decision_tree.train(train_data[i])
             accuracy_score += decision_tree.test(classifier, test_data)
-        return accuracy_score / self.k
+            print(accuracy_score)
+        # return accuracy_score / self.k
+        return accuracy_score/1
 
     '''
     Partitions training and testing sets using k-fold technique.
