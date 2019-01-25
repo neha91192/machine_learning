@@ -8,7 +8,9 @@ with testing data, calculate accuracy and for each training and testing pair, av
 '''
 import os
 import math
+import random
 from Assignment1.DecisionTree import DecisionTree
+from Assignment1.LinearRegression import LinearRegression
 
 
 class SpamBase:
@@ -31,6 +33,7 @@ class SpamBase:
                 point = entry.split(',')
                 point = list(map(float, point))
                 self.data_set.append(point)
+                random.shuffle(self.data_set)
 
     def generate_feature_label(self, data):
         feature_table = {}
@@ -85,6 +88,26 @@ class SpamBase:
         # return accuracy_score / self.k
         return accuracy_score/1
 
+    def linear_regression_train(self):
+        linear_regression = LinearRegression()
+        train_data, test_data = self.kfold_split(self.k)
+        length = len(self.data_set[0])
+        accuracy = 0
+        for i in range(self.k):
+            train_labels = []
+            test_labels = []
+            features = []
+            test = []
+            for val in train_data[i]:
+                train_labels.append(val[length-1:])
+                features.append(val[:length-1])
+            for d in test_data[i]:
+                test_labels.append(d[length-1:])
+                test.append(d[:length-1])
+            prediction_result = linear_regression.classify(features, test, train_labels)
+            accuracy = accuracy + linear_regression.test(prediction_result, test_labels)
+        print(accuracy/self.k)
+
     '''
     Partitions training and testing sets using k-fold technique.
     '''
@@ -110,9 +133,10 @@ class SpamBase:
 def main():
     spamBase = SpamBase()
     spamBase.load_data_set()
-    spamBase.normalize()
+    #spamBase.normalize()
     accuracy = spamBase.train()
-    print(accuracy)
+    #spamBase.linear_regression_train()
+    # print(accuracy)
 
 
 if __name__ == '__main__':

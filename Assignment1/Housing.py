@@ -1,14 +1,14 @@
 import os
 from Assignment1.DecisionTree import DecisionTree
+from Assignment1.LinearRegression import LinearRegression
 
 class Housing:
     data_rows = []
     feature_values = {}
-    housing_train = "housing_train.txt"
-    housing_test = "housing_test.txt"
+    housing_train = "housing_test.txt"
+    housing_test = "housing_train.txt"
     data_set = []
     test_set=[]
-    k = 5
 
     def __init__(self):
         self.rel_path = os.path.dirname(os.path.abspath(__file__))
@@ -82,14 +82,34 @@ class Housing:
         accuracy_score = decision_tree.test(classifier, self.test_set)
         return accuracy_score
 
+    def linear_regression_train(self):
+        linear_regression = LinearRegression()
+        length = len(self.data_set[0])
+        train_labels = []
+        test_labels = []
+        features = []
+        test = []
+        for val in self.data_set:
+            train_labels.append(val[length-1:])
+            features.append(val[:length-1])
+        for d in self.test_set:
+            test_labels.append(d[length-1:])
+            test.append(d[:length-1])
+        prediction_result = linear_regression.classify(features, test, train_labels)
+        accuracy = linear_regression.test(prediction_result, test_labels)
+        print(accuracy)
+
 
 def main():
     housing = Housing()
     housing.load_data_set()
-    housing.data_set = housing.normalize(housing.data_set)
-    housing.test_set = housing.normalize(housing.test_set)
+    #housing.data_set = housing.normalize(housing.data_set)
+    #housing.test_set = housing.normalize(housing.test_set)
     accuracy = housing.train()
     print(accuracy)
+    #housing.linear_regression_train()
+
+
 
 
 if __name__ == '__main__':
