@@ -80,19 +80,17 @@ class SpamBase:
         decision_tree = DecisionTree(False)
         accuracy_score = 0
         train_data, test_data = self.kfold_split(self.k)
-        for i in range(1):
+        for i in range(self.k):
             #feature_set, labels = self.generate_feature_label(train_data[i])
             classifier = decision_tree.train(train_data[i])
-            accuracy_score += decision_tree.test(classifier, test_data)
-            print(accuracy_score)
-        # return accuracy_score / self.k
-        return accuracy_score/1
+            accuracy_score = accuracy_score+ decision_tree.test(classifier, test_data[i])
+        return accuracy_score/self.k
 
     def linear_regression_train(self):
         linear_regression = LinearRegression()
         train_data, test_data = self.kfold_split(self.k)
         length = len(self.data_set[0])
-        accuracy = 0
+        mse = 0
         for i in range(self.k):
             train_labels = []
             test_labels = []
@@ -105,8 +103,8 @@ class SpamBase:
                 test_labels.append(d[length-1:])
                 test.append(d[:length-1])
             prediction_result = linear_regression.classify(features, test, train_labels)
-            accuracy = accuracy + linear_regression.test(prediction_result, test_labels)
-        print(accuracy/self.k)
+            mse = mse + linear_regression.test(prediction_result, test_labels)
+        print(mse/self.k)
 
     '''
     Partitions training and testing sets using k-fold technique.
@@ -134,9 +132,10 @@ def main():
     spamBase = SpamBase()
     spamBase.load_data_set()
     #spamBase.normalize()
-    accuracy = spamBase.train()
+    mse = spamBase.train()
     #spamBase.linear_regression_train()
-    # print(accuracy)
+    print("mean score")
+    print(mse)
 
 
 if __name__ == '__main__':

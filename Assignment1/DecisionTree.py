@@ -1,10 +1,5 @@
-
-'''
-for each n-1 split points calculate mean square error. Choose the split which gives minimum error. 
-'''
 import math
 import sys
-
 
 class Node:
     threshold = 0.0
@@ -21,7 +16,7 @@ class DecisionTree:
     labels = []
     training_set=[]
     selected_feature_ids = set()
-    max_depth=5
+    max_depth=4
     selected_mse_feature = set()
     regression = False
     threshold_points = {}
@@ -31,8 +26,10 @@ class DecisionTree:
         self.regression = is_Regression
 
     def build_tree(self, node, depth):
+        if node is None:
+            return
         data_rows = node.feature_list
-        if len(data_rows) < 2:
+        if len(data_rows) < 10:
             return
         if self.regression:
             if depth > self.max_depth:
@@ -40,7 +37,7 @@ class DecisionTree:
             else:
                 result = self.get_best_feature_mse(len(data_rows))
         else:
-            stopping = self.stopping_condition(data_rows, self.labels)
+            stopping = self.stopping_condition(data_rows, self.labels, depth)
             if len(stopping) == 0:
                 return
             if stopping[0]:
@@ -65,25 +62,25 @@ class DecisionTree:
         for i in data_rows:
             if self.training_set[i][node.feature_index] < node.threshold:
                 left_rows.append(i)
-                left_sum = left_sum + self.training_set[i][node.feature_index]
+                left_sum = left_sum + self.labels[i]
             else:
                 right_rows.append(i)
-                right_sum = right_sum + self.training_set[i][node.feature_index]
+                right_sum = right_sum + self.labels[i]
 
-        node.left = Node()
-        node.left.feature_list = left_rows
         if len(left_rows) > 0:
+            node.left = Node()
+            node.left.feature_list = left_rows
             node.left.decision = left_sum/len(left_rows)
-        node.right = Node()
-        node.right.feature_list = right_rows
         if len(right_rows) > 0:
+            node.right = Node()
+            node.right.feature_list = right_rows
             node.right.decision = right_sum/len(right_rows)
         self.build_tree(node.left, depth+1)
         self.build_tree(node.right, depth+1)
 
         return node
 
-    def stopping_condition(self, data_rows, labels):
+    def stopping_condition(self, data_rows, labels, depth):
         result = []
         if len(data_rows) == 0:
             return result
@@ -97,9 +94,9 @@ class DecisionTree:
                 not_spam = not_spam+1
         p_spam = spam/(spam+not_spam)
         p_not_spam = not_spam/(spam+not_spam)
-        if p_spam > 0.8 or p_not_spam>0.8:
+        if p_spam > 0.8 or p_not_spam>0.8 or depth > self.max_depth or len(data_rows) < 10:
             result[0] = True
-            if p_spam>0.8:
+            if p_spam>p_not_spam:
                 result.append(1.0)
             else:
                 result.append(0.0)
@@ -111,7 +108,8 @@ class DecisionTree:
         for feature_id, feature_values in self.feature_set.items():
             if feature_id in self.selected_feature_ids:
                 continue
-            for t in self.threshold_points[feature_id]:
+            points = self.get_top_points(feature_values)
+            for t in points:
                 spam1 = 0
                 not_spam1 = 0
                 spam2 = 0
@@ -258,6 +256,27 @@ class DecisionTree:
 
         return feature_table, label
 
+    def get_top_points(self, points_list):
+        result = []
+        points_set = set(points_list)
+        points = list(points_set)
+        points.sort()
+        t = 0
+        if(len(points)>400 and len(points)<1001):
+            t = 2
+        elif(len(points) > 1001 and len(points) < 2001):
+            t = 4
+        elif (len(points) > 2001 and len(points) < 3001):
+            t = 5
+        elif (len(points) > 2001 and len(points) < 3001):
+            t = 6
+        else:
+            t = 8
+        i=0
+        while i<len(points):
+            result.append(points[i])
+            i=i+t
+        return result
 
     def test(self, classifier, test_data):
         square = 0
@@ -278,8 +297,9 @@ class DecisionTree:
                         break
                     else:
                         temp = temp.right
-            actual = test_data[i][len(test_data[0])-1]
+            actual = self.labels[i]
             square = square + math.pow((predicted - actual), 2)
+        print(square/len(test_data))
         return square/len(test_data)
 
     def calculate_entropy(self, spam, not_spam):

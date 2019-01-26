@@ -1,11 +1,12 @@
 import os
 from Assignment1.DecisionTree import DecisionTree
 from Assignment1.LinearRegression import LinearRegression
+import random
 
 class Housing:
     data_rows = []
     feature_values = {}
-    housing_train = "housing_test.txt"
+    housing_train = "housing_train.txt"
     housing_test = "housing_train.txt"
     data_set = []
     test_set=[]
@@ -24,6 +25,8 @@ class Housing:
                 point = entry.split()
                 point = list(map(float, point))
                 self.data_set.append(point)
+                #random.shuffle(self.data_set)
+
 
         with open(self.rel_path + '/' + self.housing_test, 'r', encoding="utf-8") as self.housing_test:
             self.data_rows = self.housing_test.read().splitlines()
@@ -31,6 +34,7 @@ class Housing:
                 point = entry.split()
                 point = list(map(float, point))
                 self.test_set.append(point)
+                #random.shuffle(self.data_set)
 
     def generate_feature_label(self, data):
         feature_table = {}
@@ -91,10 +95,10 @@ class Housing:
         test = []
         for val in self.data_set:
             train_labels.append(val[length-1:])
-            features.append(val[:length-1])
+            features.append([1]+val[:length-1])
         for d in self.test_set:
             test_labels.append(d[length-1:])
-            test.append(d[:length-1])
+            test.append([1]+d[:length-1])
         prediction_result = linear_regression.classify(features, test, train_labels)
         accuracy = linear_regression.test(prediction_result, test_labels)
         print(accuracy)
@@ -105,9 +109,9 @@ def main():
     housing.load_data_set()
     #housing.data_set = housing.normalize(housing.data_set)
     #housing.test_set = housing.normalize(housing.test_set)
-    accuracy = housing.train()
-    print(accuracy)
-    #housing.linear_regression_train()
+    #accuracy = housing.train()
+    #print(accuracy)
+    housing.linear_regression_train()
 
 
 

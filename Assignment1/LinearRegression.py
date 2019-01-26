@@ -1,7 +1,9 @@
 import numpy as np
 import math
 
-
+'''
+add biase
+'''
 class LinearRegression:
     threshold = 0.44
     is_binary = False
@@ -30,5 +32,4 @@ class LinearRegression:
             for i in range(len(labels)):
                 diff = labels[i][0] - predictions[i][0]
                 square = square + math.pow(diff, 2)
-        print(square/len(labels))
         return square / len(labels)
