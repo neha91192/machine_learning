@@ -127,6 +127,15 @@ class SpamBase:
             i = i + test_size
         return train_data, test_data
 
+    def printTree(self, node):
+        if node is None:
+            return
+        print("Rows"+node.feature_list)
+        print("Feature id"+node.feature_index)
+        print("threshold"+node.threshold)
+        self.printTree(node.left)
+        self.printTree(node.right)
+
 
 def main():
     spamBase = SpamBase()

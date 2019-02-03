@@ -109,8 +109,8 @@ def main():
     housing.load_data_set()
     #housing.data_set = housing.normalize(housing.data_set)
     #housing.test_set = housing.normalize(housing.test_set)
-    #accuracy = housing.train()
-    #print(accuracy)
+    accuracy = housing.train()
+    print(accuracy)
     housing.linear_regression_train()
 
 

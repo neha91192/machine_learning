@@ -29,9 +29,9 @@ class DecisionTree:
         if node is None:
             return
         data_rows = node.feature_list
-        if len(data_rows) < 10:
-            return
         if self.regression:
+            if len(data_rows) < 10:
+                return
             if depth > self.max_depth:
                 return
             else:
@@ -70,11 +70,13 @@ class DecisionTree:
         if len(left_rows) > 0:
             node.left = Node()
             node.left.feature_list = left_rows
-            node.left.decision = left_sum/len(left_rows)
+            if self.regression:
+                node.left.decision = left_sum/len(left_rows)
         if len(right_rows) > 0:
             node.right = Node()
             node.right.feature_list = right_rows
-            node.right.decision = right_sum/len(right_rows)
+            if self.regression:
+                node.right.decision = right_sum/len(right_rows)
         self.build_tree(node.left, depth+1)
         self.build_tree(node.right, depth+1)
 
@@ -94,7 +96,7 @@ class DecisionTree:
                 not_spam = not_spam+1
         p_spam = spam/(spam+not_spam)
         p_not_spam = not_spam/(spam+not_spam)
-        if p_spam > 0.8 or p_not_spam>0.8 or depth > self.max_depth or len(data_rows) < 10:
+        if p_spam > 0.75 or p_not_spam>0.75 or depth > self.max_depth or len(data_rows) < 200:
             result[0] = True
             if p_spam>p_not_spam:
                 result.append(1.0)
@@ -114,12 +116,13 @@ class DecisionTree:
                 not_spam1 = 0
                 spam2 = 0
                 not_spam2 = 0
+                #identify if this is working properly
                 for idx, val in enumerate(feature_values):
                     if val < t:
                         if self.labels[idx] == 1.0:
                             spam1 = spam1 + 1
                         else:
-                            not_spam1 = not_spam1
+                            not_spam1 = not_spam1 + 1
                     else:
                         if self.labels[idx] == 1.0:
                             spam2 = spam2 + 1
@@ -131,10 +134,11 @@ class DecisionTree:
                     e1 = self.calculate_entropy(spam1, not_spam1)
                 if spam2 !=0 and not_spam2 != 0:
                     e2 = self.calculate_entropy(spam2, not_spam2)
-                current_ig = self.calculate_ig(spam1, not_spam1, spam2, not_spam2, e1, e2, root_count, e)
+                #current_ig = self.calculate_ig(spam1, not_spam1, spam2, not_spam2, e1, e2, root_count, e)
+                current_ig = e1 + e2
                 if feature_id in ig_table:
                     max_ig_value = ig_table[feature_id]
-                    if max_ig_value[0] < current_ig:
+                    if max_ig_value[0] > current_ig:
                         max_ig_value[0] = current_ig
                         max_ig_value[1] = t
                 else:
@@ -142,11 +146,11 @@ class DecisionTree:
                     max_ig_value.append(current_ig)
                     max_ig_value.append(t)
                 ig_table[feature_id] = max_ig_value
-        max_ig = -1
+        max_ig = sys.maxsize
         max_feature = 0
         threshold = 0.0
         for i, val in ig_table.items():
-            if val[0] > max_ig and i not in self.selected_feature_ids:
+            if val[0] < max_ig and i not in self.selected_feature_ids:
                 max_feature = i
                 max_ig = val[0]
                 threshold = val[1]
@@ -226,6 +230,7 @@ class DecisionTree:
         feature_set, labels = self.generate_feature_label(train_data)
         self.feature_set = feature_set
         self.labels = labels
+        #print(len(self.labels))
         self.training_set = train_data
         data_rows = []
         for i in range(len(train_data)):
@@ -261,25 +266,50 @@ class DecisionTree:
         points_set = set(points_list)
         points = list(points_set)
         points.sort()
-        t = 0
-        if(len(points)>400 and len(points)<1001):
-            t = 2
-        elif(len(points) > 1001 and len(points) < 2001):
-            t = 4
-        elif (len(points) > 2001 and len(points) < 3001):
-            t = 5
-        elif (len(points) > 2001 and len(points) < 3001):
-            t = 6
-        else:
-            t = 8
-        i=0
-        while i<len(points):
+        t = 1
+        # if(len(points)>400 and len(points)<1001):
+        #     t = 2
+        # elif(len(points) > 1001 and len(points) < 2001):
+        #     t = 4
+        # elif (len(points) > 2001 and len(points) < 3001):
+        #     t = 5
+        # elif (len(points) > 2001 and len(points) < 3001):
+        #     t = 6
+        # else:
+        #     t = 8
+        i=1
+        while i<len(points)-1:
             result.append(points[i])
             i=i+t
         return result
 
+    # def test(self, classifier, test_data):
+    #     square = 0
+    #     for i in range(len(test_data)):
+    #         temp = classifier
+    #         while temp is not None:
+    #             feature_index = temp.feature_index
+    #             threshold = temp.threshold
+    #             if test_data[i][feature_index] < threshold:
+    #                 if temp.left is None:
+    #                     predicted = temp.decision
+    #                     break
+    #                 else:
+    #                     temp = temp.left
+    #             else:
+    #                 if temp.right is None:
+    #                     predicted = temp.decision
+    #                     break
+    #                 else:
+    #                     temp = temp.right
+    #         # actual = self.labels[i]
+    #         actual = test_data[i][len(test_data[0]) - 1]
+    #         square = square + math.pow((predicted - actual), 2)
+    #     print(square/len(test_data))
+    #     return square/len(test_data)
+
     def test(self, classifier, test_data):
-        square = 0
+        match = 0
         for i in range(len(test_data)):
             temp = classifier
             while temp is not None:
@@ -297,10 +327,18 @@ class DecisionTree:
                         break
                     else:
                         temp = temp.right
-            actual = self.labels[i]
-            square = square + math.pow((predicted - actual), 2)
-        print(square/len(test_data))
-        return square/len(test_data)
+            actual = test_data[i][len(test_data[0])-1]
+            if(predicted == None):
+                print("Not assigned")
+            if actual == predicted:
+                match = match + 1
+            # square = square + math.pow((predicted - actual), 2)
+        # print(square / len(test_data))
+        print(match)
+        print(len(test_data))
+        accuracy = match/len(test_data)
+        print(accuracy)
+        return accuracy
 
     def calculate_entropy(self, spam, not_spam):
         p1 = spam/(spam+not_spam)

@@ -2,11 +2,13 @@ import numpy as np
 import math
 
 '''
-add biase
+add bias
 '''
 class LinearRegression:
     threshold = 0.44
     is_binary = False
+    iterations = 1000
+    l = 0.00001
 
     def classify(self, features, test_data, labels):
         X = np.matrix(features)
@@ -33,3 +35,18 @@ class LinearRegression:
                 diff = labels[i][0] - predictions[i][0]
                 square = square + math.pow(diff, 2)
         return square / len(labels)
+
+    def gradient_descent(self, train_data, labels, test_data):
+        m = len(labels)
+        n = len(train_data[0])
+        wi = np.random.randn(n,1)
+        X = np.matrix(train_data)
+        Y = np.matrix(labels)
+
+        for i in range(self.iterations):
+            hx = X.T.dot(wi)
+            wi = wi - self.l*(2/m)*(Y.T-hx).dot(X)
+        result = test_data.dot(wi)
+
+        return result
+
