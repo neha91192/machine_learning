@@ -91,6 +91,7 @@ class SpamBase:
         train_data, test_data = self.kfold_split(self.k)
         length = len(self.data_set[0])
         mse = 0
+        accuracy = 0
         for i in range(self.k):
             train_labels = []
             test_labels = []
@@ -104,6 +105,8 @@ class SpamBase:
                 test.append(d[:length-1])
             prediction_result = linear_regression.classify(features, test, train_labels)
             mse = mse + linear_regression.test(prediction_result, test_labels)
+            accuracy = accuracy + linear_regression.find_accuracy(prediction_result, test_labels, True)
+        print(accuracy/self.k)
         print(mse/self.k)
 
     '''
@@ -136,15 +139,110 @@ class SpamBase:
         self.printTree(node.left)
         self.printTree(node.right)
 
+    def linear_regression_descent(self):
+        linear_regression = LinearRegression()
+        train_data, test_data = self.kfold_split(self.k)
+        length = len(self.data_set[0])
+        mse = 0
+        accuracy = 0
+        for i in range(self.k):
+            train_labels = []
+            test_labels = []
+            features = []
+            test = []
+            for val in train_data[i]:
+                train_labels.append(val[length - 1:])
+                features.append([1]+val[:length - 1])
+            for d in test_data[i]:
+                test_labels.append(d[length - 1:])
+                test.append([1]+d[:length - 1])
+            prediction_result = linear_regression.gradient_descent(features,train_labels, test)
+            mse = mse + linear_regression.test(prediction_result, test_labels)
+            accuracy = accuracy + linear_regression.find_accuracy(prediction_result, test_labels, True)
+        print(accuracy/self.k)
+        return mse/self.k
+
+    def linear_regression_logistic(self):
+        linear_regression = LinearRegression()
+        train_data, test_data = self.kfold_split(self.k)
+        length = len(self.data_set[0])
+        mse = 0
+        accuracy = 0
+        for i in range(self.k):
+            train_labels = []
+            test_labels = []
+            features = []
+            test = []
+            for val in train_data[i]:
+                train_labels.append(val[length - 1:])
+                features.append(val[:length - 1])
+            for d in test_data[i]:
+                test_labels.append(d[length - 1:])
+                test.append(d[:length - 1])
+            prediction_result = linear_regression.logistic(features,train_labels, test)
+            mse = mse + linear_regression.test(prediction_result, test_labels)
+            accuracy = accuracy + linear_regression.find_accuracy(prediction_result, test_labels, True)
+        print(accuracy/self.k)
+        return mse/self.k
+
+    def linear_regression_ridge(self):
+        linear_regression = LinearRegression()
+        train_data, test_data = self.kfold_split(self.k)
+        length = len(self.data_set[0])
+        mse = 0
+        accuracy = 0
+        for i in range(self.k):
+            train_labels = []
+            test_labels = []
+            features = []
+            test = []
+            for val in train_data[i]:
+                train_labels.append(val[length - 1:])
+                features.append(val[:length - 1])
+            for d in test_data[i]:
+                test_labels.append(d[length - 1:])
+                test.append(d[:length - 1])
+            prediction_result = linear_regression.ridge(features, train_labels, test, test_labels)
+            mse = mse + linear_regression.test(prediction_result, test_labels)
+            accuracy = accuracy + linear_regression.find_accuracy(prediction_result, test_labels, True)
+        print(accuracy / self.k)
+        return mse / self.k
+
+    def linear_regression_newton(self):
+        linear_regression = LinearRegression()
+        train_data, test_data = self.kfold_split(self.k)
+        length = len(self.data_set[0])
+        mse = 0
+        accuracy = 0
+        for i in range(self.k):
+            train_labels = []
+            test_labels = []
+            features = []
+            test = []
+            for val in train_data[i]:
+                train_labels.append(val[length - 1:])
+                features.append(val[:length - 1])
+            for d in test_data[i]:
+                test_labels.append(d[length - 1:])
+                test.append(d[:length - 1])
+            prediction_result = linear_regression.newton(features,train_labels, test)
+            mse = mse + linear_regression.test(prediction_result, test_labels)
+            accuracy = accuracy + linear_regression.find_accuracy(prediction_result, test_labels, True)
+            print(mse)
+        print(accuracy/self.k)
+        return mse/self.k
+
 
 def main():
     spamBase = SpamBase()
     spamBase.load_data_set()
-    #spamBase.normalize()
-    mse = spamBase.train()
-    #spamBase.linear_regression_train()
-    print("mean score")
-    print(mse)
+    spamBase.normalize()
+    #mse = spamBase.linear_regression_train()
+    # mse = spamBase.linear_regression_descent()
+    #mse = spamBase.linear_regression_logistic()
+    #mse = spamBase.linear_regression_logistic()
+    mse = spamBase.linear_regression_newton()
+    print("mean square errors")
 
 
 if __name__ == '__main__':

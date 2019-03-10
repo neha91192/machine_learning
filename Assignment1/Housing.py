@@ -7,7 +7,7 @@ class Housing:
     data_rows = []
     feature_values = {}
     housing_train = "housing_train.txt"
-    housing_test = "housing_train.txt"
+    housing_test = "housing_test.txt"
     data_set = []
     test_set=[]
 
@@ -25,7 +25,7 @@ class Housing:
                 point = entry.split()
                 point = list(map(float, point))
                 self.data_set.append(point)
-                #random.shuffle(self.data_set)
+                random.shuffle(self.data_set)
 
 
         with open(self.rel_path + '/' + self.housing_test, 'r', encoding="utf-8") as self.housing_test:
@@ -34,7 +34,7 @@ class Housing:
                 point = entry.split()
                 point = list(map(float, point))
                 self.test_set.append(point)
-                #random.shuffle(self.data_set)
+                random.shuffle(self.data_set)
 
     def generate_feature_label(self, data):
         feature_table = {}
@@ -103,15 +103,83 @@ class Housing:
         accuracy = linear_regression.test(prediction_result, test_labels)
         print(accuracy)
 
+    def linear_regression_descent(self):
+        linear_regression = LinearRegression()
+        length = len(self.data_set[0])
+        train_labels = []
+        test_labels = []
+        features = []
+        test = []
+        for val in self.data_set:
+            train_labels.append(val[length-1:])
+            features.append([1]+val[:length-1])
+        for d in self.test_set:
+            test_labels.append(d[length-1:])
+            test.append([1]+d[:length-1])
+        prediction_result = linear_regression.gradient_descent(features, train_labels, test)
+        print("GD")
+        mse = linear_regression.test(prediction_result, test_labels)
+        accuracy =  linear_regression.find_accuracy(prediction_result, test_labels, False)
+
+        print(mse)
+
+    def linear_regression_logistic(self):
+        linear_regression = LinearRegression()
+        length = len(self.data_set[0])
+        train_labels = []
+        test_labels = []
+        features = []
+        test = []
+        for val in self.data_set:
+            train_labels.append(val[length - 1:])
+            features.append([1] + val[:length - 1])
+        for d in self.test_set:
+            test_labels.append(d[length - 1:])
+            test.append([1] + d[:length - 1])
+        prediction_result = linear_regression.logistic(features, train_labels, test)
+        print("Logistic")
+        mse = linear_regression.test(prediction_result, test_labels)
+        #accuracy = linear_regression.find_accuracy(prediction_result, test_labels, False)
+
+        print(mse)
+
+    def linear_regression_ridge(self):
+        linear_regression = LinearRegression()
+        length = len(self.data_set[0])
+        train_labels = []
+        test_labels = []
+        features = []
+        test = []
+        for val in self.data_set:
+            train_labels.append(val[length - 1:])
+            features.append([1] + val[:length - 1])
+        for d in self.test_set:
+            test_labels.append(d[length - 1:])
+            test.append([1] + d[:length - 1])
+        prediction_result = linear_regression.ridge(features, train_labels, test, test_labels)
+        print("Ridge")
+        mse = linear_regression.test(prediction_result, test_labels)
+        #accuracy = linear_regression.find_accuracy(prediction_result, test_labels, False)
+
+        print(mse)
+
 
 def main():
     housing = Housing()
     housing.load_data_set()
-    #housing.data_set = housing.normalize(housing.data_set)
+    housing_data = housing.data_set
+    data_l=len(housing.data_set)
+    housing_data.extend(housing.test_set)
+    data = housing.normalize(housing_data)
+    housing.data_set = data[:data_l]
+    housing.test_set = data[data_l:]
+    # housing.data_set = housing.normalize(housing_data)
     #housing.test_set = housing.normalize(housing.test_set)
-    accuracy = housing.train()
-    print(accuracy)
-    housing.linear_regression_train()
+    # accuracy = housing.train()
+    # print(accuracy)
+    #housing.linear_regression_descent()
+    housing.linear_regression_logistic()
+    #housing.linear_regression_ridge()
 
 
 
